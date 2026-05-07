@@ -43,3 +43,13 @@ cap-widget {
     --cap-invalid-border-color:       #ed1a23;     /* urg_red-600  */
     --cap-invalid-ring-color:         #ed1a2333;   /* urg_red-600 / 20% */
 }
+
+/* ── Lien d'attribution Cap (optionnel) ───────────────────────────────
+ * Le widget affiche un lien "Cap" pointant vers trycap.dev.
+ * La licence Apache 2.0 n'exige pas son affichage dans l'interface.
+ * Décommentez le bloc ci-dessous pour le masquer.
+ *
+ * cap-widget::part(attribution) {
+ *     display: none;
+ * }
+ */
