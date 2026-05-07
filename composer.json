@@ -1,0 +1,38 @@
+{
+    "name": "your-vendor/laravel-cap",
+    "description": "Laravel wrapper for Cap (tiagozip/cap) — self-hosted CAPTCHA alternative",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["laravel", "captcha", "cap", "proof-of-work", "spam-protection"],
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^11.0|^12.0",
+        "illuminate/http": "^11.0|^12.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0|^10.0",
+        "phpunit/phpunit": "^11.0|^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "LaravelCap\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LaravelCap\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "LaravelCap\\CapServiceProvider"
+            ],
+            "aliases": {
+                "Cap": "LaravelCap\\Facades\\Cap"
+            }
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
