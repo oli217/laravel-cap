@@ -4,6 +4,12 @@
     "type": "library",
     "license": "MIT",
     "keywords": ["laravel", "captcha", "cap", "proof-of-work", "spam-protection"],
+    "authors": [
+        {
+            "name": "oliweb",
+            "homepage": "https://github.com/oli217"
+        }
+    ],
     "require": {
         "php": "^8.2",
         "illuminate/support": "^11.0|^12.0",
