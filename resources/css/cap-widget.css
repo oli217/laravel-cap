@@ -2,30 +2,43 @@
  * Cap widget — feuille de styles publiable
  *
  * Ce fichier est publié dans public/vendor/cap/cap-widget.css
- * et chargé via la directive @capStyles.
+ * et chargé via la directive @capStyles dans votre layout.
  *
- * Personnalisez les variables CSS ci-dessous pour adapter le
- * widget à votre charte graphique. Les valeurs indiquées sont
- * les défauts du widget.
+ * Les variables CSS s'appliquent à l'élément <cap-widget> et
+ * traversent le Shadow DOM du widget.
  *
- * Référence : https://docs.trycap.dev/widget/styling
+ * Personnalisez les valeurs ci-dessous pour adapter le widget
+ * à votre charte graphique.
  */
 
 cap-widget {
-    /* Couleurs */
-    --cap-color-primary:    #6366f1;
-    --cap-color-success:    #22c55e;
-    --cap-color-error:      #ef4444;
-    --cap-color-background: #ffffff;
-    --cap-color-border:     #e5e7eb;
-    --cap-color-text:       #111827;
-    --cap-color-text-muted: #6b7280;
+    /* ── Conteneur ────────────────────────────────────────── */
+    --cap-background:       #fdfdfd;       /* fond du widget                */
+    --cap-border-color:     #dddddd8f;     /* bordure du widget             */
+    --cap-border-radius:    14px;          /* rayon des coins               */
+    --cap-widget-width:     230px;         /* largeur totale                */
+    --cap-widget-height:    58px;          /* hauteur minimale              */
+    --cap-widget-padding:   14px;          /* padding interne               */
+    --cap-gap:              15px;          /* espace case ↔ texte           */
 
-    /* Dimensions */
-    --cap-border-radius:    0.5rem;
-    --cap-padding:          0.75rem 1rem;
+    /* ── Texte ────────────────────────────────────────────── */
+    --cap-color:            #212121;       /* couleur du label              */
+    --cap-font:             system, -apple-system, "BlinkMacSystemFont",
+                            "Segoe UI", "Helvetica Neue", sans-serif;
 
-    /* Typographie */
-    --cap-font-family:      inherit;
-    --cap-font-size:        0.875rem;
+    /* ── Case à cocher ────────────────────────────────────── */
+    --cap-checkbox-size:              25px;
+    --cap-checkbox-margin:            2px;
+    --cap-checkbox-background:        #fafafa91;
+    --cap-checkbox-border:            1px solid #aaaaaad1;
+    --cap-checkbox-border-radius:     6px;
+
+    /* ── Spinner (état "vérification") ────────────────────── */
+    --cap-spinner-color:              #000;
+    --cap-spinner-background-color:   #eee;
+    --cap-spinner-thickness:          3;
+
+    /* ── État invalide ────────────────────────────────────── */
+    --cap-invalid-border-color:       #f55b50;
+    --cap-invalid-ring-color:         #f55b5033;
 }
