@@ -1,5 +1,5 @@
 {
-    "name": "your-vendor/laravel-cap",
+    "name": "oliweb/laravel-cap",
     "description": "Laravel wrapper for Cap (tiagozip/cap) — self-hosted CAPTCHA alternative",
     "type": "library",
     "license": "MIT",
