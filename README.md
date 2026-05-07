@@ -73,6 +73,32 @@ Include the Cap widget and its script in any Blade form:
 
 The widget automatically injects a hidden `cap-token` field into its parent form upon successful verification.
 
+#### CSP nonce support
+
+`@capScripts` accepts an optional nonce for strict Content Security Policies:
+
+```blade
+{{-- Laravel Vite --}}
+@capScripts(Vite::cspNonce())
+
+{{-- Spatie CSP or custom nonce --}}
+@capScripts($nonce)
+```
+
+#### CSP headers
+
+Cap's widget relies on Web Workers and WebAssembly for the Proof-of-Work computation. A strict CSP must account for this beyond the script nonce:
+
+```
+Content-Security-Policy:
+  script-src 'nonce-{nonce}' 'strict-dynamic';
+  worker-src blob:;
+  wasm-unsafe-eval;
+```
+
+`worker-src blob:` is required because the widget spawns workers via `Blob` URLs.
+`wasm-unsafe-eval` is required for the WebAssembly hash computation.
+
 ### Middleware
 
 Protect any route by applying the `cap.verify` middleware:

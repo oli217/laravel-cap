@@ -44,8 +44,11 @@ class CapServiceProvider extends ServiceProvider
             return "<?php echo '<cap-widget data-cap-api-endpoint=\"' . e(config('cap.endpoint')) . '\"></cap-widget>'; ?>";
         });
 
-        Blade::directive('capScripts', function () {
-            return "<?php echo '<script type=\"module\" src=\"https://cdn.jsdelivr.net/npm/cap-widget\"></script>'; ?>";
+        Blade::directive('capScripts', function (string $expression) {
+            if (empty(trim($expression))) {
+                return "<?php echo '<script type=\"module\" src=\"https://cdn.jsdelivr.net/npm/cap-widget\"></script>'; ?>";
+            }
+            return "<?php echo '<script type=\"module\" nonce=\"' . e({$expression}) . '\" src=\"https://cdn.jsdelivr.net/npm/cap-widget\"></script>'; ?>";
         });
     }
 }
