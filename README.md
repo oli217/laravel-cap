@@ -24,6 +24,18 @@ Publish the configuration file:
 php artisan vendor:publish --tag=cap-config
 ```
 
+Publish the JS and CSS assets (required for `@capScripts` and `@capStyles`):
+
+```bash
+php artisan vendor:publish --tag=cap-assets
+```
+
+Publish the translation files (optional — to override messages):
+
+```bash
+php artisan vendor:publish --tag=cap-lang
+```
+
 ## Configuration
 
 Add the following variables to your `.env` file:
@@ -52,6 +64,46 @@ Setting `CAP_FAIL_OPEN=true` inverts this: communication errors silently pass, s
 
 **An explicitly invalid token (`success: false`) is always rejected regardless of this setting.** Fail-open only covers infrastructure failures, not verification failures.
 
+## Translations
+
+Server-side messages (validation rule, middleware) are translatable. English and French are included out of the box.
+
+To override or add a language, publish the translation files and edit `lang/vendor/cap/{locale}/messages.php`:
+
+```bash
+php artisan vendor:publish --tag=cap-lang
+```
+
+```php
+// lang/vendor/cap/fr/messages.php
+return [
+    'validation_failed' => 'La vérification :attribute a échoué. Veuillez réessayer.',
+    'middleware_failed'  => 'La vérification Cap a échoué.',
+];
+```
+
+Laravel selects the right file automatically based on `App::getLocale()`.
+
+## Widget styling
+
+Publish the CSS asset and include it via `@capStyles`:
+
+```bash
+php artisan vendor:publish --tag=cap-assets
+```
+
+Edit `public/vendor/cap/cap-widget.css` to override the CSS custom properties exposed by the widget:
+
+```css
+cap-widget {
+    --cap-color-primary:    #6366f1;
+    --cap-color-success:    #22c55e;
+    --cap-border-radius:    0.5rem;
+    --cap-font-family:      inherit;
+    /* ... */
+}
+```
+
 ## Usage
 
 ### Blade directives
@@ -59,6 +111,7 @@ Setting `CAP_FAIL_OPEN=true` inverts this: communication errors silently pass, s
 Include the Cap widget and its script in any Blade form:
 
 ```blade
+@capStyles
 @capScripts
 
 <form method="POST" action="/contact">
@@ -68,8 +121,11 @@ Include the Cap widget and its script in any Blade form:
 </form>
 ```
 
-`@cap` renders the `<cap-widget>` element with the configured endpoint.
-`@capScripts` renders the `<script>` tag loading the widget from jsDelivr.
+| Directive | Output |
+|---|---|
+| `@cap` | `<cap-widget>` with the configured endpoint |
+| `@capScripts` | `<script>` loading the widget from `public/vendor/cap/cap-widget.js` |
+| `@capStyles` | `<link>` loading the theme from `public/vendor/cap/cap-widget.css` |
 
 The widget automatically injects a hidden `cap-token` field into its parent form upon successful verification.
 

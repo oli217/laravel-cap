@@ -15,7 +15,7 @@ class CapRule implements ValidationRule
         $cap = $this->cap ?? app(Cap::class);
 
         if (! $cap->verify((string) $value)) {
-            $fail('The :attribute verification failed. Please try again.');
+            $fail(trans('cap::messages.validation_failed'));
         }
     }
 }

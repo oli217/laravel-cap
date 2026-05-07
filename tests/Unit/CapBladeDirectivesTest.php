@@ -42,7 +42,7 @@ class CapBladeDirectivesTest extends TestCase
         $html = Blade::render('@capScripts');
 
         $this->assertStringContainsString('<script type="module"', $html);
-        $this->assertStringContainsString('src="https://cdn.jsdelivr.net/npm/cap-widget"', $html);
+        $this->assertStringContainsString('vendor/cap/cap-widget.js', $html);
         $this->assertStringNotContainsString('nonce', $html);
     }
 
@@ -52,7 +52,7 @@ class CapBladeDirectivesTest extends TestCase
         $html = Blade::render('@capScripts("abc123")');
 
         $this->assertStringContainsString('nonce="abc123"', $html);
-        $this->assertStringContainsString('src="https://cdn.jsdelivr.net/npm/cap-widget"', $html);
+        $this->assertStringContainsString('vendor/cap/cap-widget.js', $html);
     }
 
     #[Test]
@@ -62,5 +62,14 @@ class CapBladeDirectivesTest extends TestCase
 
         $this->assertStringNotContainsString('<script>alert(1)</script>', $html);
         $this->assertStringContainsString('&lt;script&gt;', $html);
+    }
+
+    #[Test]
+    public function capStyles_directive_renders_link_tag(): void
+    {
+        $html = Blade::render('@capStyles');
+
+        $this->assertStringContainsString('<link rel="stylesheet"', $html);
+        $this->assertStringContainsString('vendor/cap/cap-widget.css', $html);
     }
 }

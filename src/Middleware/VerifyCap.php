@@ -16,7 +16,7 @@ class VerifyCap
         $token = (string) $request->input(config('cap.token_field', 'cap-token'), '');
 
         if (! $this->cap->verify($token)) {
-            abort(422, 'Cap verification failed.');
+            abort(422, trans('cap::messages.middleware_failed'));
         }
 
         return $next($request);

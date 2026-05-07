@@ -1,0 +1,31 @@
+/*
+ * Cap widget — feuille de styles publiable
+ *
+ * Ce fichier est publié dans public/vendor/cap/cap-widget.css
+ * et chargé via la directive @capStyles.
+ *
+ * Personnalisez les variables CSS ci-dessous pour adapter le
+ * widget à votre charte graphique. Les valeurs indiquées sont
+ * les défauts du widget.
+ *
+ * Référence : https://docs.trycap.dev/widget/styling
+ */
+
+cap-widget {
+    /* Couleurs */
+    --cap-color-primary:    #6366f1;
+    --cap-color-success:    #22c55e;
+    --cap-color-error:      #ef4444;
+    --cap-color-background: #ffffff;
+    --cap-color-border:     #e5e7eb;
+    --cap-color-text:       #111827;
+    --cap-color-text-muted: #6b7280;
+
+    /* Dimensions */
+    --cap-border-radius:    0.5rem;
+    --cap-padding:          0.75rem 1rem;
+
+    /* Typographie */
+    --cap-font-family:      inherit;
+    --cap-font-size:        0.875rem;
+}
