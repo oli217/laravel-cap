@@ -78,4 +78,42 @@ class CapServiceTest extends TestCase
                 && $request['response'] === 'my-token';
         });
     }
+
+    #[Test]
+    public function it_returns_true_on_network_failure_when_fail_open(): void
+    {
+        Http::fake([
+            'https://cap.test/site-key/siteverify' => Http::failedConnection(),
+        ]);
+
+        $this->assertTrue($this->capWithFailOpen()->verify('any-token'));
+    }
+
+    #[Test]
+    public function it_returns_true_on_http_server_error_when_fail_open(): void
+    {
+        Http::fake([
+            'https://cap.test/site-key/siteverify' => Http::response([], 500),
+        ]);
+
+        $this->assertTrue($this->capWithFailOpen()->verify('any-token'));
+    }
+
+    #[Test]
+    public function it_still_returns_false_on_invalid_token_when_fail_open(): void
+    {
+        Http::fake([
+            'https://cap.test/site-key/siteverify' => Http::response(['success' => false]),
+        ]);
+
+        $this->assertFalse($this->capWithFailOpen()->verify('invalid-token'));
+    }
+
+    private function capWithFailOpen(): Cap
+    {
+        $this->app['config']->set('cap.fail_open', true);
+        $this->app->forgetInstance(Cap::class);
+
+        return app(Cap::class);
+    }
 }

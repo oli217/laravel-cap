@@ -20,5 +20,6 @@ abstract class TestCase extends Orchestra
         $app['config']->set('cap.secret', 'test-secret');
         $app['config']->set('cap.token_field', 'cap-token');
         $app['config']->set('cap.timeout', 5);
+        $app['config']->set('cap.fail_open', false);
     }
 }

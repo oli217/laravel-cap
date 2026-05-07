@@ -25,14 +25,19 @@ class Cap
                     'response' => $token,
                 ]);
         } catch (\Throwable) {
-            return false;
+            return $this->failOpen();
         }
 
         if ($response->failed()) {
-            return false;
+            return $this->failOpen();
         }
 
         return (bool) ($response->json('success') ?? false);
+    }
+
+    private function failOpen(): bool
+    {
+        return (bool) ($this->config['fail_open'] ?? false);
     }
 
     /**

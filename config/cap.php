@@ -43,4 +43,20 @@ return [
     |
     */
     'timeout' => (int) env('CAP_TIMEOUT', 5),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mode fail-open
+    |--------------------------------------------------------------------------
+    |
+    | Quand true, toute erreur de communication vers l'instance Cap (réseau,
+    | timeout, erreur serveur 5xx) laisse passer la requête plutôt que de la
+    | bloquer. Un token explicitement invalide (success: false) est toujours
+    | refusé, quel que soit ce paramètre.
+    |
+    | Recommandé en production si la disponibilité du service prime sur la
+    | sécurité anti-spam.
+    |
+    */
+    'fail_open' => (bool) env('CAP_FAIL_OPEN', false),
 ];

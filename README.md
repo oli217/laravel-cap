@@ -33,6 +33,7 @@ CAP_ENDPOINT=https://cap.example.com/your-site-key/
 CAP_SECRET=your-secret-key
 CAP_TOKEN_FIELD=cap-token
 CAP_TIMEOUT=5
+CAP_FAIL_OPEN=false
 ```
 
 | Variable          | Description                                                                 | Default     |
@@ -41,6 +42,15 @@ CAP_TIMEOUT=5
 | `CAP_SECRET`      | Secret key from your Cap dashboard                                          | —           |
 | `CAP_TOKEN_FIELD` | Name of the hidden field injected by the Cap widget                         | `cap-token` |
 | `CAP_TIMEOUT`     | HTTP timeout in seconds for the `/siteverify` request                       | `5`         |
+| `CAP_FAIL_OPEN`   | When `true`, let requests through on network/server errors (see below)      | `false`     |
+
+### Fail-open mode
+
+By default, any communication error with the Cap instance (network failure, timeout, HTTP 5xx) blocks the request, just like an invalid token would.
+
+Setting `CAP_FAIL_OPEN=true` inverts this: communication errors silently pass, so a Cap outage does not take your forms down with it.
+
+**An explicitly invalid token (`success: false`) is always rejected regardless of this setting.** Fail-open only covers infrastructure failures, not verification failures.
 
 ## Usage
 
