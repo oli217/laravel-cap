@@ -27,6 +27,10 @@ class CapServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__ . '/../config/cap.php' => config_path('cap.php'),
             ], 'cap-config');
+
+            $this->publishes([
+                __DIR__ . '/../resources/js/cap-widget.js' => public_path('vendor/cap/cap-widget.js'),
+            ], 'cap-assets');
         }
 
         $this->registerMiddleware();
@@ -49,9 +53,9 @@ class CapServiceProvider extends ServiceProvider
 
         Blade::directive('capScripts', function (string $expression) {
             if (empty(trim($expression))) {
-                return "<?php echo '<script type=\"module\" src=\"https://cdn.jsdelivr.net/npm/cap-widget\"></script>'; ?>";
+                return "<?php echo '<script type=\"module\" src=\"' . e(asset('vendor/cap/cap-widget.js')) . '\"></script>'; ?>";
             }
-            return "<?php echo '<script type=\"module\" nonce=\"' . e({$expression}) . '\" src=\"https://cdn.jsdelivr.net/npm/cap-widget\"></script>'; ?>";
+            return "<?php echo '<script type=\"module\" nonce=\"' . e({$expression}) . '\" src=\"' . e(asset('vendor/cap/cap-widget.js')) . '\"></script>'; ?>";
         });
     }
 }
