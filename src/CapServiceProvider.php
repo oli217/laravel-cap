@@ -40,8 +40,11 @@ class CapServiceProvider extends ServiceProvider
 
     private function registerBladeDirectives(): void
     {
-        Blade::directive('cap', function () {
-            return "<?php echo '<cap-widget data-cap-api-endpoint=\"' . e(config('cap.endpoint')) . '\"></cap-widget>'; ?>";
+        Blade::directive('cap', function (string $expression) {
+            if (empty(trim($expression))) {
+                return "<?php echo '<cap-widget data-cap-api-endpoint=\"' . e(config('cap.endpoint')) . '\"></cap-widget>'; ?>";
+            }
+            return "<?php echo '<cap-widget data-cap-api-endpoint=\"' . e(config('cap.endpoint')) . '\" data-cap-csp-nonce=\"' . e({$expression}) . '\"></cap-widget>'; ?>";
         });
 
         Blade::directive('capScripts', function (string $expression) {

@@ -75,15 +75,20 @@ The widget automatically injects a hidden `cap-token` field into its parent form
 
 #### CSP nonce support
 
-`@capScripts` accepts an optional nonce for strict Content Security Policies:
+Both directives accept an optional nonce for strict Content Security Policies:
 
 ```blade
 {{-- Laravel Vite --}}
 @capScripts(Vite::cspNonce())
+@cap(Vite::cspNonce())
 
 {{-- Spatie CSP or custom nonce --}}
 @capScripts($nonce)
+@cap($nonce)
 ```
+
+`@cap` passes the nonce as `data-cap-csp-nonce` on the widget element, which Cap uses internally for its workers and inline scripts.
+`@capScripts` passes the nonce as the standard `nonce` attribute on the `<script>` tag.
 
 #### CSP headers
 

@@ -15,6 +15,25 @@ class CapBladeDirectivesTest extends TestCase
 
         $this->assertStringContainsString('<cap-widget', $html);
         $this->assertStringContainsString('https://cap.test/site-key/', $html);
+        $this->assertStringNotContainsString('data-cap-csp-nonce', $html);
+    }
+
+    #[Test]
+    public function cap_directive_renders_widget_with_nonce(): void
+    {
+        $html = Blade::render('@cap("abc123")');
+
+        $this->assertStringContainsString('data-cap-csp-nonce="abc123"', $html);
+        $this->assertStringContainsString('data-cap-api-endpoint=', $html);
+    }
+
+    #[Test]
+    public function cap_directive_escapes_nonce_value(): void
+    {
+        $html = Blade::render('@cap("<script>alert(1)</script>")');
+
+        $this->assertStringNotContainsString('<script>alert(1)</script>', $html);
+        $this->assertStringContainsString('&lt;script&gt;', $html);
     }
 
     #[Test]
