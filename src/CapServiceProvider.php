@@ -31,8 +31,9 @@ class CapServiceProvider extends ServiceProvider
             ], 'cap-config');
 
             $this->publishes([
-                __DIR__ . '/../resources/js/cap-widget.js'  => public_path('vendor/cap/cap-widget.js'),
-                __DIR__ . '/../resources/css/cap-widget.css' => public_path('vendor/cap/cap-widget.css'),
+                __DIR__ . '/../resources/js/cap-widget.js'         => public_path('vendor/cap/cap-widget.js'),
+                __DIR__ . '/../resources/css/cap-widget.css'        => public_path('vendor/cap/cap-widget.css'),
+                __DIR__ . '/../resources/wasm/cap_wasm_bg.wasm'     => public_path('vendor/cap/cap_wasm_bg.wasm'),
             ], 'cap-assets');
 
             $this->publishes([
@@ -60,13 +61,26 @@ class CapServiceProvider extends ServiceProvider
 
         Blade::directive('capScripts', function (string $expression) {
             if (empty(trim($expression))) {
-                return "<?php echo '<script type=\"module\" src=\"' . e(asset('vendor/cap/cap-widget.js')) . '\"></script>'; ?>";
+                return "<?php echo '<script>window.CAP_CUSTOM_WASM_URL=' . json_encode(asset('vendor/cap/cap_wasm_bg.wasm')) . '</script>' . '<script type=\"module\" src=\"' . e(asset('vendor/cap/cap-widget.js')) . '\"></script>'; ?>";
             }
-            return "<?php echo '<script type=\"module\" nonce=\"' . e({$expression}) . '\" src=\"' . e(asset('vendor/cap/cap-widget.js')) . '\"></script>'; ?>";
+            return "<?php echo '<script nonce=\"' . e({$expression}) . '\">window.CAP_CUSTOM_WASM_URL=' . json_encode(asset('vendor/cap/cap_wasm_bg.wasm')) . '</script>' . '<script type=\"module\" nonce=\"' . e({$expression}) . '\" src=\"' . e(asset('vendor/cap/cap-widget.js')) . '\"></script>'; ?>";
         });
 
         Blade::directive('capStyles', function () {
             return "<?php echo '<link rel=\"stylesheet\" href=\"' . e(asset('vendor/cap/cap-widget.css')) . '\">'; ?>";
+        });
+
+        Blade::directive('capConfig', function (string $expression) {
+            if (empty(trim($expression))) {
+                return "<?php echo '<script>'
+                    . 'window.CAP_API_ENDPOINT=' . json_encode(config('cap.endpoint')) . ';'
+                    . 'window.CAP_TOKEN_FIELD=' . json_encode(config('cap.token_field', 'cap-token')) . ';'
+                    . '</script>'; ?>";
+            }
+            return "<?php echo '<script nonce=\"' . e({$expression}) . '\">'
+                . 'window.CAP_API_ENDPOINT=' . json_encode(config('cap.endpoint')) . ';'
+                . 'window.CAP_TOKEN_FIELD=' . json_encode(config('cap.token_field', 'cap-token')) . ';'
+                . '</script>'; ?>";
         });
     }
 }
