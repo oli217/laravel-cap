@@ -7,7 +7,7 @@ Cap works without tracking, cookies, or third-party services. This package integ
 ## Requirements
 
 - PHP **^8.2**
-- Laravel **11 or 12**
+- Laravel **11, 12, or 13**
 - A running [Cap instance](https://trycap.dev/guide/) (self-hosted via Docker)
 
 ## Installation
@@ -24,11 +24,19 @@ Publish the configuration file:
 php artisan vendor:publish --tag=cap-config
 ```
 
-Publish the JS and CSS assets (required for `@capScripts` and `@capStyles`):
+Publish the JS, CSS, and WASM assets (required for `@capScripts` and `@capStyles`):
 
 ```bash
 php artisan vendor:publish --tag=cap-assets
 ```
+
+This publishes the following files to `public/vendor/cap/`:
+
+| File | Description |
+|------|-------------|
+| `cap-widget.js` | Cap widget (custom element + programmatic API) |
+| `cap-widget.css` | Default widget styles |
+| `cap_wasm_bg.wasm` | WebAssembly module for proof-of-work (served locally, no CDN required) |
 
 Publish the translation files (optional — to override messages):
 
@@ -48,13 +56,13 @@ CAP_TIMEOUT=5
 CAP_FAIL_OPEN=false
 ```
 
-| Variable          | Description                                                                 | Default     |
-|-------------------|-----------------------------------------------------------------------------|-------------|
+| Variable          | Description                                                                    | Default     |
+|-------------------|--------------------------------------------------------------------------------|-------------|
 | `CAP_ENDPOINT`    | Full URL of your Cap instance including the site key (trailing slash required) | —           |
-| `CAP_SECRET`      | Secret key from your Cap dashboard                                          | —           |
-| `CAP_TOKEN_FIELD` | Name of the hidden field injected by the Cap widget                         | `cap-token` |
-| `CAP_TIMEOUT`     | HTTP timeout in seconds for the `/siteverify` request                       | `5`         |
-| `CAP_FAIL_OPEN`   | When `true`, let requests through on network/server errors (see below)      | `false`     |
+| `CAP_SECRET`      | Secret key from your Cap dashboard                                             | —           |
+| `CAP_TOKEN_FIELD` | Name of the hidden field injected by the Cap widget                            | `cap-token` |
+| `CAP_TIMEOUT`     | HTTP timeout in seconds for the `/siteverify` request                          | `5`         |
+| `CAP_FAIL_OPEN`   | When `true`, let requests through on network/server errors (see below)         | `false`     |
 
 ### Fail-open mode
 
@@ -86,20 +94,14 @@ Laravel selects the right file automatically based on `App::getLocale()`.
 
 ## Widget styling
 
-Publish the CSS asset and include it via `@capStyles`:
-
-```bash
-php artisan vendor:publish --tag=cap-assets
-```
-
 Edit `public/vendor/cap/cap-widget.css` to override the CSS custom properties exposed by the widget:
 
 ```css
 cap-widget {
-    --cap-color-primary:    #6366f1;
-    --cap-color-success:    #22c55e;
-    --cap-border-radius:    0.5rem;
-    --cap-font-family:      inherit;
+    --cap-color-primary:  #6366f1;
+    --cap-color-success:  #22c55e;
+    --cap-border-radius:  0.5rem;
+    --cap-font-family:    inherit;
     /* ... */
 }
 ```
@@ -108,7 +110,16 @@ cap-widget {
 
 ### Blade directives
 
-Include the Cap widget and its script in any Blade form:
+| Directive | Description |
+|-----------|-------------|
+| `@cap` | Renders `<cap-widget>` with the configured endpoint |
+| `@capScripts` | Injects `window.CAP_CUSTOM_WASM_URL` + `<script type="module">` for the widget |
+| `@capStyles` | `<link>` loading the theme from `public/vendor/cap/cap-widget.css` |
+| `@capConfig` | `<script>` exposing `window.CAP_API_ENDPOINT` and `window.CAP_TOKEN_FIELD` |
+
+#### Standard widget mode
+
+Include the Cap widget in any Blade form:
 
 ```blade
 @capStyles
@@ -121,44 +132,68 @@ Include the Cap widget and its script in any Blade form:
 </form>
 ```
 
-| Directive | Output |
-|---|---|
-| `@cap` | `<cap-widget>` with the configured endpoint |
-| `@capScripts` | `<script>` loading the widget from `public/vendor/cap/cap-widget.js` |
-| `@capStyles` | `<link>` loading the theme from `public/vendor/cap/cap-widget.css` |
+The widget automatically injects a hidden `cap-token` field (or the value of `CAP_TOKEN_FIELD`) into its parent form upon successful verification.
 
-The widget automatically injects a hidden `cap-token` field into its parent form upon successful verification.
+`@capScripts` always injects `window.CAP_CUSTOM_WASM_URL` pointing to the locally published WASM, so no external CDN is contacted at runtime.
+
+#### Programmatic mode
+
+Use `@capConfig` to expose the endpoint to JavaScript, then instantiate `Cap` directly without rendering a visible widget:
+
+```blade
+@capConfig
+@capScripts
+
+<form method="POST" action="/contact">
+    @csrf
+    <input type="hidden" name="cap-token" id="cap-token">
+    <button type="submit" id="submit-btn">Submit</button>
+</form>
+
+<script type="module">
+document.getElementById('submit-btn').addEventListener('click', async (e) => {
+    e.preventDefault();
+
+    const cap = new Cap({ apiEndpoint: window.CAP_API_ENDPOINT });
+    const { token } = await cap.solve();
+
+    document.getElementById('cap-token').value = token;
+    e.target.closest('form').submit();
+});
+</script>
+```
+
+`Cap` creates a hidden `cap-widget` element in the background and exposes a `solve()` method that returns `{ token }`. No visible widget is rendered.
+
+`window.CAP_API_ENDPOINT` and `window.CAP_TOKEN_FIELD` are set by `@capConfig` from your PHP configuration, so you never need to hard-code the endpoint in JavaScript.
 
 #### CSP nonce support
 
-Both directives accept an optional nonce for strict Content Security Policies:
+All directives accept an optional nonce for strict Content Security Policies:
 
 ```blade
-{{-- Laravel Vite --}}
+@capConfig(Vite::cspNonce())
 @capScripts(Vite::cspNonce())
 @cap(Vite::cspNonce())
-
-{{-- Spatie CSP or custom nonce --}}
-@capScripts($nonce)
-@cap($nonce)
 ```
 
 `@cap` passes the nonce as `data-cap-csp-nonce` on the widget element, which Cap uses internally for its workers and inline scripts.
-`@capScripts` passes the nonce as the standard `nonce` attribute on the `<script>` tag.
 
 #### CSP headers
 
-Cap's widget relies on Web Workers and WebAssembly for the Proof-of-Work computation. A strict CSP must account for this beyond the script nonce:
+Cap's widget relies on Web Workers and WebAssembly. A strict CSP must account for this:
 
 ```
 Content-Security-Policy:
   script-src 'nonce-{nonce}' 'strict-dynamic';
   worker-src blob:;
   wasm-unsafe-eval;
+  connect-src 'self';
 ```
 
-`worker-src blob:` is required because the widget spawns workers via `Blob` URLs.
-`wasm-unsafe-eval` is required for the WebAssembly hash computation.
+`worker-src blob:` — required because the widget spawns workers via `Blob` URLs.
+`wasm-unsafe-eval` — required for the WebAssembly hash computation.
+`connect-src 'self'` — sufficient for WASM since assets are served locally after `vendor:publish`.
 
 ### Middleware
 
