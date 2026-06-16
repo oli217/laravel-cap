@@ -17,6 +17,7 @@ class CapFrameController
                     "style-src 'self' 'unsafe-inline'; " .
                     "connect-src *; " .
                     "worker-src blob:; " .
+                    "img-src data:; " .
                     "frame-ancestors 'self';",
                 'X-Frame-Options' => 'SAMEORIGIN',
                 'Cache-Control'   => 'no-store',

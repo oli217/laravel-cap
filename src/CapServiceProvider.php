@@ -100,6 +100,10 @@ class CapServiceProvider extends ServiceProvider
                    . 'if(!e.data||e.data.type!==\'cap:token\')return;'
                    . 'document.getElementById(\'cap-frame-token\').value=e.data.token;'
                    . '});'
+                   . 'window.capSolve=function(){'
+                   . 'document.getElementById(\'cap-frame\').contentWindow'
+                   . '.postMessage({type:\'cap:start\'},window.location.origin);'
+                   . '};'
                    . '})();'
                    . '</script>';
                 ?>
@@ -122,6 +126,10 @@ class CapServiceProvider extends ServiceProvider
                . 'if(!e.data||e.data.type!==\'cap:token\')return;'
                . 'document.getElementById(\'cap-frame-token\').value=e.data.token;'
                . '});'
+               . 'window.capSolve=function(){'
+               . 'document.getElementById(\'cap-frame\').contentWindow'
+               . '.postMessage({type:\'cap:start\'},window.location.origin);'
+               . '};'
                . '})();'
                . '</script>';
             ?>

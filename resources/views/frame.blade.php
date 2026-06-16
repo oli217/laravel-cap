@@ -10,8 +10,16 @@
 <body>
     <cap-widget data-cap-api-endpoint="{{ config('cap.endpoint') }}"></cap-widget>
     <script type="module">
-    document.querySelector('cap-widget').addEventListener('solve', (e) => {
+    const widget = document.querySelector('cap-widget');
+
+    widget.addEventListener('solve', (e) => {
         window.parent.postMessage({ type: 'cap:token', token: e.detail.token }, '*');
+    });
+
+    window.addEventListener('message', (e) => {
+        if (e.origin !== window.location.origin) return;
+        if (!e.data || e.data.type !== 'cap:start') return;
+        widget.solve();
     });
     </script>
 </body>
