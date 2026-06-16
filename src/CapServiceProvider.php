@@ -116,8 +116,8 @@ class CapServiceProvider extends ServiceProvider
             \$_capFrameSrc   = e(route('cap.frame'));
             \$_capNonce      = e({$expression});
             echo '<input type="hidden" name="' . \$_capTokenField . '" id="cap-frame-token">'
+               . '<style nonce="' . \$_capNonce . '">#cap-frame{border:0;overflow:hidden;width:300px;height:58px;display:block;}</style>'
                . '<iframe src="' . \$_capFrameSrc . '" id="cap-frame"'
-               . ' style="border:none;overflow:hidden;width:300px;height:58px;"'
                . ' title="Cap CAPTCHA" loading="lazy"></iframe>'
                . '<script nonce="' . \$_capNonce . '">'
                . '(function(){'
