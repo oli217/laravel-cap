@@ -91,8 +91,8 @@ class CapServiceProvider extends ServiceProvider
                 \$_capFrameSrc   = e(route('cap.frame'));
                 echo '<input type="hidden" name="' . \$_capTokenField . '" id="cap-frame-token">'
                    . '<iframe src="' . \$_capFrameSrc . '" id="cap-frame"'
-                   . ' style="border:none;overflow:hidden;width:300px;height:58px;"'
-                   . ' title="Cap CAPTCHA" loading="lazy"></iframe>'
+                   . ' style="width:0;height:0;border:0;overflow:hidden;"'
+                   . ' title="Cap CAPTCHA" aria-hidden="true"></iframe>'
                    . '<script>'
                    . '(function(){'
                    . 'window.addEventListener(\'message\',function(e){'
@@ -116,9 +116,9 @@ class CapServiceProvider extends ServiceProvider
             \$_capFrameSrc   = e(route('cap.frame'));
             \$_capNonce      = e({$expression});
             echo '<input type="hidden" name="' . \$_capTokenField . '" id="cap-frame-token">'
-               . '<style nonce="' . \$_capNonce . '">#cap-frame{border:0;overflow:hidden;width:300px;height:58px;display:block;}</style>'
+               . '<style nonce="' . \$_capNonce . '">#cap-frame{width:0;height:0;border:0;overflow:hidden;}</style>'
                . '<iframe src="' . \$_capFrameSrc . '" id="cap-frame"'
-               . ' title="Cap CAPTCHA" loading="lazy"></iframe>'
+               . ' title="Cap CAPTCHA" aria-hidden="true"></iframe>'
                . '<script nonce="' . \$_capNonce . '">'
                . '(function(){'
                . 'window.addEventListener(\'message\',function(e){'
