@@ -20,6 +20,7 @@ class Cap
         try {
             $response = $this->http
                 ->timeout($this->config['timeout'])
+                ->asJson()
                 ->post($this->siteVerifyUrl(), [
                     'secret'   => $this->config['secret'],
                     'response' => $token,
