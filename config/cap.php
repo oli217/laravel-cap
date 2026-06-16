@@ -59,4 +59,15 @@ return [
     |
     */
     'fail_open' => (bool) env('CAP_FAIL_OPEN', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Route du widget iframe
+    |--------------------------------------------------------------------------
+    |
+    | Chemin de la route servant le widget Cap en mode iframe (CSP permissive).
+    | Utiliser @capFrame dans vos templates Blade pour intégrer ce mode.
+    |
+    */
+    'frame_route' => env('CAP_FRAME_ROUTE', 'cap-frame'),
 ];

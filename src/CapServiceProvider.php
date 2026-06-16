@@ -4,7 +4,9 @@ namespace LaravelCap;
 
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use LaravelCap\Http\Controllers\CapFrameController;
 use LaravelCap\Middleware\VerifyCap;
 
 class CapServiceProvider extends ServiceProvider
@@ -24,6 +26,7 @@ class CapServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'cap');
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'cap');
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -40,10 +43,23 @@ class CapServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__ . '/../resources/lang' => lang_path('vendor/cap'),
             ], 'cap-lang');
+
+            $this->publishes([
+                __DIR__ . '/../resources/views' => resource_path('views/vendor/cap'),
+            ], 'cap-views');
         }
 
+        $this->registerRoute();
         $this->registerMiddleware();
         $this->registerBladeDirectives();
+    }
+
+    private function registerRoute(): void
+    {
+        Route::get(
+            config('cap.frame_route', 'cap-frame'),
+            CapFrameController::class
+        )->name('cap.frame');
     }
 
     private function registerMiddleware(): void
@@ -65,6 +81,51 @@ class CapServiceProvider extends ServiceProvider
                 return "<?php echo '<script>window.CAP_CUSTOM_WASM_URL=' . json_encode(asset('vendor/cap/cap_wasm_bg.wasm')) . '</script>' . '<script type=\"module\" src=\"' . e(asset('vendor/cap/cap-widget.js')) . '\"></script>'; ?>";
             }
             return "<?php echo '<script nonce=\"' . e({$expression}) . '\">window.CAP_CUSTOM_WASM_URL=' . json_encode(asset('vendor/cap/cap_wasm_bg.wasm')) . ';window.CAP_SCRIPT_NONCE=' . json_encode({$expression}) . ';</script>' . '<script type=\"module\" nonce=\"' . e({$expression}) . '\" src=\"' . e(asset('vendor/cap/cap-widget.js')) . '\"></script>'; ?>";
+        });
+
+        Blade::directive('capFrame', function (string $expression) {
+            if (empty(trim($expression))) {
+                return <<<HTML
+                <?php
+                \$_capTokenField = e(config('cap.token_field', 'cap-token'));
+                \$_capFrameSrc   = e(route('cap.frame'));
+                echo '<input type="hidden" name="' . \$_capTokenField . '" id="cap-frame-token">'
+                   . '<iframe src="' . \$_capFrameSrc . '" id="cap-frame"'
+                   . ' style="border:none;overflow:hidden;width:300px;height:58px;"'
+                   . ' title="Cap CAPTCHA" loading="lazy"></iframe>'
+                   . '<script>'
+                   . '(function(){'
+                   . 'window.addEventListener(\'message\',function(e){'
+                   . 'if(e.origin!==window.location.origin)return;'
+                   . 'if(!e.data||e.data.type!==\'cap:token\')return;'
+                   . 'document.getElementById(\'cap-frame-token\').value=e.data.token;'
+                   . '});'
+                   . '})();'
+                   . '</script>';
+                ?>
+                HTML;
+            }
+
+            return <<<PHP
+            <?php
+            \$_capTokenField = e(config('cap.token_field', 'cap-token'));
+            \$_capFrameSrc   = e(route('cap.frame'));
+            \$_capNonce      = e({$expression});
+            echo '<input type="hidden" name="' . \$_capTokenField . '" id="cap-frame-token">'
+               . '<iframe src="' . \$_capFrameSrc . '" id="cap-frame"'
+               . ' style="border:none;overflow:hidden;width:300px;height:58px;"'
+               . ' title="Cap CAPTCHA" loading="lazy"></iframe>'
+               . '<script nonce="' . \$_capNonce . '">'
+               . '(function(){'
+               . 'window.addEventListener(\'message\',function(e){'
+               . 'if(e.origin!==window.location.origin)return;'
+               . 'if(!e.data||e.data.type!==\'cap:token\')return;'
+               . 'document.getElementById(\'cap-frame-token\').value=e.data.token;'
+               . '});'
+               . '})();'
+               . '</script>';
+            ?>
+            PHP;
         });
 
         Blade::directive('capStyles', function () {
