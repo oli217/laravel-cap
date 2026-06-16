@@ -64,6 +64,7 @@ CAP_FAIL_OPEN=false
 | `CAP_TOKEN_FIELD` | Name of the hidden field injected by the Cap widget                            | `cap-token` |
 | `CAP_TIMEOUT`     | HTTP timeout in seconds for the `/siteverify` request                          | `5`         |
 | `CAP_FAIL_OPEN`   | When `true`, let requests through on network/server errors (see below)         | `false`     |
+| `CAP_FRAME_ROUTE` | URL path for the iframe route (used by `@capFrame`)                            | `cap-frame` |
 
 ### Fail-open mode
 
@@ -117,6 +118,7 @@ cap-widget {
 | `@capScripts` | Injects `window.CAP_CUSTOM_WASM_URL` + `<script type="module">` for the widget |
 | `@capStyles` | `<link>` loading the theme from `public/vendor/cap/cap-widget.css` |
 | `@capConfig` | `<script>` exposing `window.CAP_API_ENDPOINT` and `window.CAP_TOKEN_FIELD` |
+| `@capFrame` | Renders the Cap widget in an isolated iframe with a permissive CSP — the parent page keeps a strict CSP without `'unsafe-eval'` |
 
 #### Standard widget mode
 
@@ -168,6 +170,80 @@ document.getElementById('submit-btn').addEventListener('click', async (e) => {
 
 `window.CAP_API_ENDPOINT` and `window.CAP_TOKEN_FIELD` are set by `@capConfig` from your PHP configuration, so you never need to hard-code the endpoint in JavaScript.
 
+#### Iframe mode (strict CSP — no `'unsafe-eval'`)
+
+When Cap's instrumentation is enabled, the widget requires `'unsafe-eval'` in `script-src`. If your page enforces a strict CSP, use `@capFrame` instead: it serves the widget in a dedicated iframe (`/cap-frame`) with its own permissive CSP, keeping the parent page clean.
+
+```blade
+{{-- In your layout: no @capScripts or @capStyles needed --}}
+
+<form @submit.prevent="submitWithCap">
+    @csrf
+    @capFrame(Vite::cspNonce())
+    <button type="submit">Submit</button>
+</form>
+```
+
+This renders:
+
+```html
+<input type="hidden" name="cap-token" id="cap-frame-token">
+<iframe src="/cap-frame" id="cap-frame"
+        style="border:none;overflow:hidden;width:300px;height:58px;"
+        title="Cap CAPTCHA" loading="lazy"></iframe>
+<script nonce="…">
+(function(){
+  window.addEventListener('message', function(e) {
+    if (e.origin !== window.location.origin) return;
+    if (!e.data || e.data.type !== 'cap:token') return;
+    document.getElementById('cap-frame-token').value = e.data.token;
+  });
+  window.capSolve = function() {
+    document.getElementById('cap-frame').contentWindow
+      .postMessage({ type: 'cap:start' }, window.location.origin);
+  };
+})();
+</script>
+```
+
+**`/cap-frame` route** is registered automatically by the service provider. Its `Content-Security-Policy` header includes `'unsafe-eval'`, `'wasm-unsafe-eval'`, `blob:`, and `img-src data:` — everything Cap needs — while `frame-ancestors 'self'` prevents embedding from external origins.
+
+**Token flow:**
+
+```
+Parent (strict CSP)                iframe /cap-frame (permissive CSP)
+      │── postMessage(cap:start) ──►│  widget.solve()
+      │◄── postMessage(cap:token) ──│  e.detail.token
+      │  fills #cap-frame-token     │
+```
+
+**Programmatic trigger** — `@capFrame` exposes `window.capSolve()` on the parent page:
+
+```javascript
+// Trigger Cap resolution from Alpine, Vue, React, etc.
+window.capSolve();
+
+// Listen for the token (in addition to the hidden input auto-fill)
+window.addEventListener('message', (e) => {
+    if (e.origin !== window.location.origin) return;
+    if (!e.data || e.data.type !== 'cap:token') return;
+    // e.data.token is ready — pass it to your backend
+    myForm.submit(e.data.token);
+});
+```
+
+**Without nonce** (if your CSP does not use nonces):
+
+```blade
+@capFrame
+```
+
+**Customising the route path** — set `CAP_FRAME_ROUTE` in `.env`:
+
+```env
+CAP_FRAME_ROUTE=captcha/frame
+```
+
 #### CSP nonce support
 
 All directives accept an optional nonce for strict Content Security Policies:
@@ -203,9 +279,13 @@ Content-Security-Policy:
 > report an `[instr_timeout]` error and the Cap server will return HTTP 429, making every
 > verification attempt fail.
 >
-> **Workaround:** disable instrumentation for the site key in the Cap admin dashboard
-> (`PUT /keys/:siteKey/config` with `{"instrumentation": false}`).
-> Adding `'unsafe-eval'` to `script-src` would also unblock it but significantly weakens your CSP.
+> **Recommended workaround:** use [`@capFrame`](#iframe-mode-strict-csp--no-unsafe-eval) — the widget
+> runs in a dedicated iframe with its own permissive CSP, leaving the parent page CSP strict.
+>
+> **Alternative workarounds:**
+> - Disable instrumentation for the site key in the Cap admin dashboard
+>   (`PUT /keys/:siteKey/config` with `{"instrumentation": false}`).
+> - Add `'unsafe-eval'` to `script-src` (weakens the CSP of the parent page).
 >
 > This is a known upstream issue: [tiagozip/cap#268](https://github.com/tiagozip/cap/issues/268).
 
