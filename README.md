@@ -36,7 +36,8 @@ This publishes the following files to `public/vendor/cap/`:
 |------|-------------|
 | `cap-widget.js` | Cap widget (custom element + programmatic API) |
 | `cap-widget.css` | Default widget styles |
-| `cap_wasm_bg.wasm` | WebAssembly module for proof-of-work (served locally, no CDN required) |
+| `cap_wasm_bg.wasm` | WebAssembly binary for proof-of-work (served locally, no CDN required) |
+| `cap_wasm.js` | JS loader for the WASM module |
 
 Publish the translation files (optional — to override messages):
 
@@ -181,19 +182,32 @@ All directives accept an optional nonce for strict Content Security Policies:
 
 #### CSP headers
 
-Cap's widget relies on Web Workers and WebAssembly. A strict CSP must account for this:
+Cap's widget runs WebAssembly locally. A strict CSP must account for this:
 
 ```
 Content-Security-Policy:
-  script-src 'nonce-{nonce}' 'strict-dynamic';
-  worker-src blob:;
-  wasm-unsafe-eval;
-  connect-src 'self';
+  script-src 'nonce-{nonce}' 'strict-dynamic' 'wasm-unsafe-eval';
+  connect-src 'self' https://your-cap-instance.example.com;
 ```
 
-`worker-src blob:` — required because the widget spawns workers via `Blob` URLs.
-`wasm-unsafe-eval` — required for the WebAssembly hash computation.
-`connect-src 'self'` — sufficient for WASM since assets are served locally after `vendor:publish`.
+`'wasm-unsafe-eval'` — required for the WebAssembly proof-of-work computation.
+`connect-src` — must include your Cap instance origin so the widget can reach `/challenge` and `/redeem`.
+
+> **Instrumentation and strict CSP**
+>
+> Cap's optional **instrumentation** feature (enabled per site key in the Cap admin dashboard) runs
+> fingerprinting code inside a sandboxed iframe. Since Cap v3.x this code calls `eval()` and
+> `new Function()`, which are blocked by a `script-src` without `'unsafe-eval'`.
+>
+> If instrumentation is enabled and `'unsafe-eval'` is absent from your CSP, the widget will
+> report an `[instr_timeout]` error and the Cap server will return HTTP 429, making every
+> verification attempt fail.
+>
+> **Workaround:** disable instrumentation for the site key in the Cap admin dashboard
+> (`PUT /keys/:siteKey/config` with `{"instrumentation": false}`).
+> Adding `'unsafe-eval'` to `script-src` would also unblock it but significantly weakens your CSP.
+>
+> This is a known upstream issue: [tiagozip/cap#268](https://github.com/tiagozip/cap/issues/268).
 
 ### Middleware
 
